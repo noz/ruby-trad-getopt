@@ -16,6 +16,7 @@ spec = Gem::Specification.new { |s|
   s.files = FileList[
     "LICENSE",
     "Rakefile",
+    "test.rb",
     "trad-getopt.rb",
     "trad-getopt.txt",
   ]
@@ -25,4 +26,13 @@ Gem::PackageTask.new(spec) { |pkg|
   pkg.need_tar_gz = true
   pkg.need_tar_bz2 = true
   pkg.need_zip = true
+}
+
+# require "rake/testtask"
+# Rake::TestTask.new { |t|
+#   t.test_files = FileList["test.rb"]
+# }
+desc "do unit test"
+task :test {
+  ruby "-w", "test.rb"
 }

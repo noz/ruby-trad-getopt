@@ -76,7 +76,6 @@ class Test_getopt < Test::Unit::TestCase
     av = [ "-a" ]
     $stderr = StringIO.new
     got = getopt(av, "a::", optional_short:false)
-    msg = $stderr.string
     $stderr = STDERR
     assert_equal [ :argument_required, "a"],  got
   end
@@ -203,6 +202,35 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal ["a", "bar"],  getopt(av, opts, permute:true)
     assert_equal nil, getopt(av, opts, permute:true)
     assert_equal ["foo", "baz"], av
+  end
+
+  test "allow_empty_optarg" do
+    av = [ "-a", "" ]
+    opts = "a:"
+    $stderr = StringIO.new
+    assert_equal [:argument_required, "a"],  getopt(av, opts, allow_empty_optarg:false)
+    $stderr = STDERR
+  end
+  test "allow_empty_optarg. long" do
+    av = [ "--foo=" ]
+    longopts = { "foo" => :required_argument }
+    $stderr = StringIO.new
+    assert_equal [:argument_required, "foo"],  getopt(av, "", longopts, allow_empty_optarg:false)
+    $stderr = STDERR
+  end
+  test "allow_empty_optarg. long 2" do
+    av = [ "--foo", "" ]
+    longopts = { "foo" => :required_argument }
+    $stderr = StringIO.new
+    assert_equal [:argument_required, "foo"],  getopt(av, "", longopts, allow_empty_optarg:false)
+    $stderr = STDERR
+  end
+  test "allow_empty_optarg. optional long" do
+    av = [ "--foo=" ]
+    longopts = { "foo" => :optional_argument }
+    $stderr = StringIO.new
+    assert_equal [:argument_required, "foo"],  getopt(av, "", longopts, allow_empty_optarg:false)
+    $stderr = STDERR
   end
 
   ### short context

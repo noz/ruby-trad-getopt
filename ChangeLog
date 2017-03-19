@@ -1,3 +1,10 @@
+2017-03-19  noz
+
+	* fix version numbering
+	* add :allow_empty_optarg
+	* add test.rb and test task
+	* minor fixes to fulfill -w
+
 2017-03-06  noz
 
 	* initial commit

@@ -1,7 +1,7 @@
 # rather traditional getopt for Ruby
 
 module Getopt
-  VERSION = "20170301"
+  VERSION = "1.1.0"
 
   class GetoptError < StandardError
     def initialize option, message
@@ -37,26 +37,28 @@ module Getopt
 end
 
 def getopt(argv, opts, longopts = nil,
-           abbreviation: true, error_message: true, optional_short: true,
-           permute: false, program_name: nil, stop_by_double_hyphen: true,
+           abbreviation: true, allow_empty_optarg: true,
+           error_message: true, optional_short: true, permute: false,
+           program_name: nil, stop_by_double_hyphen: true,
            use_exception: false)
   if permute
     args = []
     until op = getopt(argv, opts, longopts,
                       permute: false,
                       abbreviation: abbreviation,
+                      allow_empty_optarg: allow_empty_optarg,
                       error_message: error_message,
                       optional_short: optional_short,
                       program_name: program_name,
                       stop_by_double_hyphen: stop_by_double_hyphen,
                       use_exception: use_exception)
       if argv.empty?
-        argv.unshift *args
+        argv.unshift(*args)
         return nil
       end
       args.push argv.shift
     end
-    argv.unshift *args
+    argv.unshift(*args)
     return op
   end
 
@@ -112,9 +114,14 @@ def getopt(argv, opts, longopts = nil,
             raise Getopt::ArgumentRequiredError.new optopt
           end
         end
+        if ! allow_empty_optarg && optarg.empty?
+          raise Getopt::ArgumentRequiredError.new optopt
+        end
         return [ optopt, optarg ]
       when :optional_argument
-        optarg = nil unless optarg
+        if ! allow_empty_optarg && optarg && optarg.empty?
+          raise Getopt::ArgumentRequiredError.new optopt
+        end
         return [ optopt, optarg ]
       else
         raise ArgumentError,
@@ -150,7 +157,7 @@ def getopt(argv, opts, longopts = nil,
     else
       # short option with required argument
       optarg = arg.empty? ? argv.shift : arg
-      if optarg.nil?
+      if optarg.nil? || (optarg.empty? && ! allow_empty_optarg)
         raise Getopt::ArgumentRequiredError.new optopt
       end
       return [ optopt, optarg ]
