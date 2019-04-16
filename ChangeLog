@@ -1,3 +1,9 @@
+2019-04-16  noz
+
+	* v1.2.1
+	* program name in error messages is its basename now
+	* print option's hyphen in error messages
+
 2017-03-19  noz
 
 	* fix version numbering

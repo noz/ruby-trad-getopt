@@ -1,29 +1,40 @@
 require "test/unit"
-require "./trad-getopt.rb"
+require_relative "trad-getopt.rb"
 
 class Test_getopt < Test::Unit::TestCase
+
+  myname = File.basename $0
+  # "test.rb"
+  # "rake_test_loader.rb" via rake test
+
+  # empty
 
   test "empty argv" do
     av = []
     assert_equal nil, getopt(av, "a")
     assert_equal [], av
   end
+
   test "empty opts" do
     av = [ "a" ]
     assert_equal nil, getopt(av, "")
     assert_equal [ "a" ], av
   end
+
   test "nil opts" do
     av = [ "a" ]
     assert_equal nil, getopt(av, nil)
     assert_equal [ "a" ], av
   end
 
+  # non-option
+
   test "stop at non option" do
     av = ["foo"]
     assert_equal nil, getopt(av, "-a")
     assert_equal ["foo"], av
   end
+
   test "unknown error" do
     av = [ "-x" ]
     $stderr = StringIO.new
@@ -31,9 +42,11 @@ class Test_getopt < Test::Unit::TestCase
     msg = $stderr.string
     $stderr = STDERR
     assert_equal [:unknown_option, "x"], got
-    assert_equal "test.rb: unknown option - x\n", msg
+    assert_equal "#{myname}: unknown option -x\n", msg
     assert_equal [], av
   end
+
+  # short
 
   test "short noarg" do
     av = [ "-a", "foo" ]
@@ -46,6 +59,7 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal ["a", "foo"], getopt(av, "a:")
     assert_equal [], av
   end
+
   test "short reqarg. error" do
     av = [ "-a" ]
     $stderr = StringIO.new
@@ -53,7 +67,7 @@ class Test_getopt < Test::Unit::TestCase
     msg = $stderr.string
     $stderr = STDERR
     assert_equal [:argument_required, "a"], got
-    assert_equal "test.rb: option requires an argument - a\n", msg
+    assert_equal "#{myname}: option requires an argument -a\n", msg
     assert_equal [], av
   end
 
@@ -62,16 +76,19 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal ["a", "foo"], getopt(av, "a::")
     assert_equal [], av
   end
+
   test "short optarg, no arg" do
     av = [ "-a", "foo" ]
     assert_equal [ "a", nil ], getopt(av, "a::")
     assert_equal [ "foo" ], av
   end
+
   test "short optarg, no arg, at tail" do
     av = [ "-a" ]
     assert_equal [ "a", nil ], getopt(av, "a::")
     assert_equal [], av
   end
+
   test "short optarg, disabled" do
     av = [ "-a" ]
     $stderr = StringIO.new
@@ -80,7 +97,7 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal [ :argument_required, "a"],  got
   end
 
-  ### concatenation
+  # concatenation
 
   test "concat, noarg + noarg" do
     av = [ "-ab" ]
@@ -88,6 +105,7 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal ["a"], getopt(av, opts)
     assert_equal ["b"], getopt(av, opts)
   end
+
   test "concat, noarg + reqarg + arg" do
     av = [ "-abfoo" ]
     opts = "ab:"
@@ -95,13 +113,14 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal ["b", "foo"], getopt(av, opts)
   end
 
-  ### special chars
+  # special chars
 
   test "single `-'" do
     av = [ "-" ]
     assert_equal nil, getopt(av, "a")
     assert_equal ["-"], av
   end
+
   test "stop by `--'" do
     av = [ "--" ]
     assert_equal nil, getopt(av, "a")
@@ -120,6 +139,7 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal ["-"], getopt(av, opts)
     assert_equal [], av
   end
+
   test "hyphen in concat, not as option" do
     av = [ "-a-" ]
     opts = "a"
@@ -129,7 +149,7 @@ class Test_getopt < Test::Unit::TestCase
     msg = $stderr.string
     $stderr = STDERR
     assert_equal [:unknown_option, "-"],  got
-    assert_equal "test.rb: unknown option - -\n", msg
+    assert_equal "#{myname}: unknown option --\n", msg
     assert_equal [], av
   end
 
@@ -137,6 +157,7 @@ class Test_getopt < Test::Unit::TestCase
     av = [ "-:" ]
     assert_equal [":"],  getopt(av, ":a")
   end
+
   test "colon not as option" do
     av = [ "-:" ]
     $stderr = StringIO.new
@@ -144,11 +165,11 @@ class Test_getopt < Test::Unit::TestCase
     msg = $stderr.string
     $stderr = STDERR
     assert_equal [:unknown_option, ":"],  got
-    assert_equal "test.rb: unknown option - :\n", msg
+    assert_equal "#{myname}: unknown option -:\n", msg
     assert_equal [], av
   end
 
-  ### keywords
+  # keywords
 
   test "program_name" do
     av = [ "-x" ]
@@ -156,7 +177,7 @@ class Test_getopt < Test::Unit::TestCase
     getopt(av, "a", error_message:true, program_name:"foo")
     msg = $stderr.string
     $stderr = STDERR
-    assert_equal "foo: unknown option - x\n", msg
+    assert_equal "foo: unknown option -x\n", msg
   end
 
   test "error_message" do
@@ -178,6 +199,7 @@ class Test_getopt < Test::Unit::TestCase
       assert_equal "unknown option", ex.message
     end
   end
+
   test "use_exception, Getopt::ArgumentRequiredError" do
     av = [ "-a" ]
     begin
@@ -189,6 +211,8 @@ class Test_getopt < Test::Unit::TestCase
     end
   end
 
+  # permute
+
   test "permute" do
     av = [ "foo", "-a", "bar" ]
     opts = "a"
@@ -196,6 +220,7 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal nil, getopt(av, opts, permute:true)
     assert_equal ["foo", "bar"], av
   end
+
   test "permute, reqarg" do
     av = [ "foo", "-a", "bar", "baz" ]
     opts = "a:"
@@ -211,6 +236,7 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal [:argument_required, "a"],  getopt(av, opts, allow_empty_optarg:false)
     $stderr = STDERR
   end
+
   test "allow_empty_optarg. long" do
     av = [ "--foo=" ]
     longopts = { "foo" => :required_argument }
@@ -218,6 +244,7 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal [:argument_required, "foo"],  getopt(av, "", longopts, allow_empty_optarg:false)
     $stderr = STDERR
   end
+
   test "allow_empty_optarg. long 2" do
     av = [ "--foo", "" ]
     longopts = { "foo" => :required_argument }
@@ -225,6 +252,7 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal [:argument_required, "foo"],  getopt(av, "", longopts, allow_empty_optarg:false)
     $stderr = STDERR
   end
+
   test "allow_empty_optarg. optional long" do
     av = [ "--foo=" ]
     longopts = { "foo" => :optional_argument }
@@ -233,7 +261,7 @@ class Test_getopt < Test::Unit::TestCase
     $stderr = STDERR
   end
 
-  ### short context
+  # short context
 
   test "short context" do
     av = [ "-a-" ]
@@ -243,6 +271,7 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal [ :unknown_option, "-" ], getopt(av, opts)
     $stderr = STDERR
   end
+
   test "short context, not long option" do
     av = [ "-a-foo" ]
     opts = "afo-"
@@ -253,6 +282,7 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal [ "-" ], getopt(av, opts, lopts)
     assert_equal [ "f" ], getopt(av, opts, lopts)
   end
+
   test "short context, not long option, error" do
     av = [ "-a-foo" ]
     opts = "a-"
@@ -266,7 +296,7 @@ class Test_getopt < Test::Unit::TestCase
     $stderr = STDERR
   end
 
-  ### long option
+  # long
 
   test "long option" do
     av = [ "--foo" ]
@@ -300,6 +330,7 @@ class Test_getopt < Test::Unit::TestCase
       assert_equal [ "--foo" ], av
     end
   end
+
   test "wrong long option type, permute" do
     av = [ "a", "--foo", "b" ]
     lopts = {
@@ -323,7 +354,7 @@ class Test_getopt < Test::Unit::TestCase
     msg = $stderr.string
     $stderr = STDERR
     assert_equal [ :unknown_option, "bar" ], got
-    assert_equal "test.rb: unknown option - bar\n", msg
+    assert_equal "#{myname}: unknown option --bar\n", msg
   end
 
   test "no_argument" do
@@ -333,6 +364,7 @@ class Test_getopt < Test::Unit::TestCase
     }
     assert_equal [ "foo" ], getopt(av, "", lopts)
   end
+
   test "no_argument, error" do
     av = [ "--foo=bar" ]
     lopts = {
@@ -343,8 +375,9 @@ class Test_getopt < Test::Unit::TestCase
     msg = $stderr.string
     $stderr = STDERR
     assert_equal [ :argument_given, "foo" ], got
-    assert_equal "test.rb: option doesn't take an argument - foo\n", msg
+    assert_equal "#{myname}: option doesn't take an argument --foo\n", msg
   end
+
   test "no_argument, exception" do
     av = [ "--foo=bar" ]
     lopts = {
@@ -366,6 +399,7 @@ class Test_getopt < Test::Unit::TestCase
     }
     assert_equal [ "foo", "bar" ], getopt(av, "", lopts)
   end
+
   test "required_argument, split" do
     av = [ "--foo", "bar" ]
     lopts = {
@@ -373,6 +407,7 @@ class Test_getopt < Test::Unit::TestCase
     }
     assert_equal [ "foo", "bar" ], getopt(av, "", lopts)
   end
+
   test "required_argument, empty arg" do
     av = [ "--foo=" ]
     lopts = {
@@ -380,6 +415,7 @@ class Test_getopt < Test::Unit::TestCase
     }
     assert_equal [ "foo", "" ], getopt(av, "", lopts)
   end
+
   test "required_argument, error" do
     av = [ "--foo" ]
     lopts = {
@@ -390,8 +426,9 @@ class Test_getopt < Test::Unit::TestCase
     msg = $stderr.string
     $stderr = STDERR
     assert_equal [ :argument_required, "foo" ], got
-    assert_equal "test.rb: option requires an argument - foo\n", msg
+    assert_equal "#{myname}: option requires an argument --foo\n", msg
   end
+
   test "required_argument, exception" do
     av = [ "--foo" ]
     lopts = {
@@ -413,6 +450,7 @@ class Test_getopt < Test::Unit::TestCase
     }
     assert_equal [ "foo", "bar" ], getopt(av, "", lopts)
   end
+
   test "optional_argument, empty arg" do
     av = [ "--foo=" ]
     lopts = {
@@ -420,6 +458,7 @@ class Test_getopt < Test::Unit::TestCase
     }
     assert_equal [ "foo", "" ], getopt(av, "", lopts)
   end
+
   test "optional_argument, no arg" do
     av = [ "--foo", "bar" ]
     lopts = {
@@ -427,6 +466,7 @@ class Test_getopt < Test::Unit::TestCase
     }
     assert_equal [ "foo", nil ], getopt(av, "", lopts)
   end
+
   test "optional_argument, no arg, at tail" do
     av = [ "--foo" ]
     lopts = {
@@ -435,6 +475,8 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal [ "foo", nil ], getopt(av, "", lopts)
   end
 
+  # abbrev
+
   test "unique abbrev, no candidates" do
     av = [ "--fo" ]
     lopts = {
@@ -442,6 +484,7 @@ class Test_getopt < Test::Unit::TestCase
     }
     assert_equal [ "foo" ], getopt(av, "", lopts)
   end
+
   test "unique abbrev" do
     av = [ "--foo-" ]
     lopts = {
@@ -450,6 +493,7 @@ class Test_getopt < Test::Unit::TestCase
     }
     assert_equal [ "foo-bar" ], getopt(av, "", lopts)
   end
+
   test "abbrev, exact match" do
     av = [ "--foo" ]
     lopts = {
@@ -458,6 +502,7 @@ class Test_getopt < Test::Unit::TestCase
     }
     assert_equal [ "foo" ], getopt(av, "", lopts)
   end
+
   test "abbrev, ambiguous" do
     av = [ "--foo" ]
     lopts = {
@@ -469,8 +514,9 @@ class Test_getopt < Test::Unit::TestCase
     msg = $stderr.string
     $stderr = STDERR
     assert_equal [ :ambiguous_option, "foo", ["foo1", "foo2"] ], got
-    assert_equal "test.rb: ambiguos option (--foo1 --foo2) - foo\n", msg
+    assert_equal "#{myname}: ambiguos option (--foo1 --foo2) --foo\n", msg
   end
+
   test "abbrev, ambiguous, exception" do
     av = [ "--foo" ]
     lopts = {
@@ -496,6 +542,6 @@ class Test_getopt < Test::Unit::TestCase
     msg = $stderr.string
     $stderr = STDERR
     assert_equal [ :unknown_option, "fo" ], got
-    assert_equal "test.rb: unknown option - fo\n", msg
+    assert_equal "#{myname}: unknown option --fo\n", msg
   end
 end

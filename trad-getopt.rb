@@ -1,7 +1,8 @@
 # rather traditional getopt for Ruby
 
 module Getopt
-  VERSION = "1.1.0"
+
+  VERSION = "1.2.1"
 
   class GetoptError < StandardError
     def initialize option, message
@@ -63,7 +64,7 @@ def getopt(argv, opts, longopts = nil,
   end
 
   opts ||= ""
-  program_name ||= $0
+  program_name ||= File.basename $0
 
   arg = argv.shift
   return nil if arg.nil?
@@ -141,7 +142,7 @@ def getopt(argv, opts, longopts = nil,
 
   optopt = arg[1]
   arg = arg[2 .. -1]
-  pos = opts.split("").find_index(optopt)
+  pos = opts.index optopt
   if pos.nil? || (optopt == ":" && pos != 0)
     argv.unshift "-#{arg}" unless arg.empty?
     # keep short option context on error
@@ -173,7 +174,15 @@ def getopt(argv, opts, longopts = nil,
 
 rescue Getopt::GetoptError => ex
   raise if use_exception
-  warn "#{program_name}: #{ex.message} - #{ex.option}" if error_message
+
+  if error_message
+    if ex.option.length == 1
+      warn "#{program_name}: #{ex.message} -#{ex.option}"
+    else
+      warn "#{program_name}: #{ex.message} --#{ex.option}"
+    end
+  end
+
   case ex
   when Getopt::UnknownOptionError
     return [ :unknown_option, ex.option ]
@@ -187,62 +196,3 @@ rescue Getopt::GetoptError => ex
 end
 
 Kernel.define_singleton_method "getopt", method(:getopt)
-
-if __FILE__ == $0
-
-def usage
-  puts <<EOD
-usage: #{$0} [-hVp] [-Llongopt] opts ...
-  -h    print this
-  -V    print revision
-  -L    define long option like -Lfoo, -Lfoo: or -Lfoo::
-  -p    permute
-  opts  define short options
-EOD
-end
-
-longopts = {}
-permute = false
-
-while op = getopt(ARGV, "hL:pV")
-  op, oparg = op
-  exit 1 if op.is_a? Symbol
-  case op
-  when "h"
-    usage
-    exit
-  when "V"
-    puts "trad-getopt rev.#{Getopt::VERSION}"
-    exit
-  when "p"
-    permute = true
-  when "L"
-    if oparg[-1] == ":"
-      if oparg[-2] == ":"
-        v = :optional_argument
-        oparg[-2] = ""
-      else
-        v = :required_argument
-      end
-      oparg[-1] = ""
-    else
-      v = :no_argument
-    end
-    longopts[oparg] = v
-  else
-    break
-  end
-end
-
-opts = ARGV.shift
-unless opts
-  puts "argument required"
-  exit 1
-end
-
-while op = getopt(ARGV, opts, longopts, permute:permute)
-  puts "option #{op} ARGV #{ARGV}"
-end
-puts "ARGV #{ARGV}"
-
-end

@@ -1,12 +1,13 @@
-require 'rake/clean'
+require "rake/testtask"
 require "rubygems/package_task"
+require "rake/clean"
 
-require "./trad-getopt.rb"	# Getopt::VERSION
+require_relative "trad-getopt.rb"	# Getopt::VERSION
 
 task :default => :gem
 
 task :gem
-spec = Gem::Specification.new { |s|
+spec = Gem::Specification.new {|s|
   s.name = "trad-getopt"
   s.version = Getopt::VERSION
   s.author = "NOZAWA Hiromasa"
@@ -22,17 +23,12 @@ spec = Gem::Specification.new { |s|
   ]
   s.require_path = "."
 }
-Gem::PackageTask.new(spec) { |pkg|
+
+Gem::PackageTask.new(spec) {|pkg|
   pkg.need_tar_gz = true
-  pkg.need_tar_bz2 = true
   pkg.need_zip = true
 }
 
-# require "rake/testtask"
-# Rake::TestTask.new { |t|
-#   t.test_files = FileList["test.rb"]
-# }
-desc "do unit test"
-task :test {
-  ruby "-w", "test.rb"
+Rake::TestTask.new {|t|
+  t.test_files = FileList[ "test.rb" ]
 }
