@@ -95,8 +95,9 @@ longopts にはキーをオプション名、値をシンボルとするハッ�
 
 - :ambiguousu_option (Getopt::AmbiguousOptionError)
   ロングオプションの省略形が一意でない。このときエラーメッセージに候補
-  を示す。また返り値の第 3 要素にも候補のリストを置く。例外を有効とし
-  ている場合は Getopt::AmbiguousOptionError#candidates() で取得できる。
+  を示す。:ambiguousu_option のみ返り値の第 2 要素はオプション文字と
+  候補リストのリストになる。例外を有効としている場合、候補リストは
+  Getopt::AmbiguousOptionError#candidates() で取得できる。
 
 = キーワード引数
 
@@ -114,6 +115,10 @@ longopts にはキーをオプション名、値をシンボルとするハッ�
 - optional_short => true
   偽にするとオプショナル引数つきショートオプションを無効にする。opts
   中の "::" を ":" と解釈してただの引数つきオプションとする。
+
+- parse => false
+  真にすると、オプション文字でなくオプションに関する情報をまとめたリスト
+  を返すようになる。Getopt.parse()、Getopt.list() が使う。
 
 - permute => false
   真にすると、オプションに出会うまで非オプションを飛ばす GNU の getopt
@@ -160,31 +165,25 @@ longopts にはキーをオプション名、値をシンボルとするハッ�
 ----------------------------------------------------------------------------
 require "trad-getopt"
 
-opts = "ab:"
-
 longopts = {
   "foo" => :no_argument,
-  "foo-bar" => :optional_argument,
-  "baz" => :required_argument,
+  "bar" => :required_argument,
+  "baz" => :optional_argument,
 }
 
-while op = getopt(ARGV, opts, longopts, permute:false)
-  case op[0]
+while (op, oparg = getopt(ARGV, "ab:c::", longopts))
+  case op
   when "a", "foo"
-    puts "option #{op[0]}"
-  when "b", "baz"
-    puts "option #{op[0]} with #{op[1]}"
-  when "foo-bar"
-    if op[1]
-      puts "option #{op[0]} with #{op[1]}"
-    else
-      puts "option #{op[0]} with no-arg"
-    end
-  when :unknown_option, :argument_required, :argument_given, :ambiguous_option
+    puts "option #{op}"
+  when "b", "bar"
+    puts "option #{op} with #{oparg.inspect}"
+  when "c", "baz"
+    puts "option #{op} with #{oparg.inspect}"
+  when Symbol
+    # errors
     exit 1
   end
 end
+
 puts "argv #{ARGV}"
 ----------------------------------------------------------------------------
-
-#eof

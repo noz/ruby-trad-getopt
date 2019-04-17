@@ -41,8 +41,8 @@ class Test_getopt < Test::Unit::TestCase
     got = getopt(av, "a")
     msg = $stderr.string
     $stderr = STDERR
-    assert_equal [:unknown_option, "x"], got
-    assert_equal "#{myname}: unknown option -x\n", msg
+    assert_equal [:unknown_option, "-x"], got
+    assert_equal "#{myname}: Unknown option: -x\n", msg
     assert_equal [], av
   end
 
@@ -66,8 +66,8 @@ class Test_getopt < Test::Unit::TestCase
     got = getopt(av, "a:")
     msg = $stderr.string
     $stderr = STDERR
-    assert_equal [:argument_required, "a"], got
-    assert_equal "#{myname}: option requires an argument -a\n", msg
+    assert_equal [:argument_required, "-a"], got
+    assert_equal "#{myname}: Option requires an argument: -a\n", msg
     assert_equal [], av
   end
 
@@ -94,7 +94,7 @@ class Test_getopt < Test::Unit::TestCase
     $stderr = StringIO.new
     got = getopt(av, "a::", optional_short:false)
     $stderr = STDERR
-    assert_equal [ :argument_required, "a"],  got
+    assert_equal [ :argument_required, "-a"],  got
   end
 
   # concatenation
@@ -148,8 +148,8 @@ class Test_getopt < Test::Unit::TestCase
     got = getopt(av, opts)
     msg = $stderr.string
     $stderr = STDERR
-    assert_equal [:unknown_option, "-"],  got
-    assert_equal "#{myname}: unknown option --\n", msg
+    assert_equal [:unknown_option, "--"],  got
+    assert_equal "#{myname}: Unknown option: --\n", msg
     assert_equal [], av
   end
 
@@ -164,8 +164,8 @@ class Test_getopt < Test::Unit::TestCase
     got = getopt(av, "a:")
     msg = $stderr.string
     $stderr = STDERR
-    assert_equal [:unknown_option, ":"],  got
-    assert_equal "#{myname}: unknown option -:\n", msg
+    assert_equal [:unknown_option, "-:"],  got
+    assert_equal "#{myname}: Unknown option: -:\n", msg
     assert_equal [], av
   end
 
@@ -177,7 +177,7 @@ class Test_getopt < Test::Unit::TestCase
     getopt(av, "a", error_message:true, program_name:"foo")
     msg = $stderr.string
     $stderr = STDERR
-    assert_equal "foo: unknown option -x\n", msg
+    assert_equal "foo: Unknown option: -x\n", msg
   end
 
   test "error_message" do
@@ -195,8 +195,8 @@ class Test_getopt < Test::Unit::TestCase
       getopt(av, "a", use_exception:true)
     rescue => ex
       assert_equal Getopt::UnknownOptionError, ex.class
-      assert_equal "x", ex.option
-      assert_equal "unknown option", ex.message
+      assert_equal "-x", ex.option
+      assert_equal "Unknown option", ex.message
     end
   end
 
@@ -206,8 +206,8 @@ class Test_getopt < Test::Unit::TestCase
       getopt(av, "a:", use_exception:true)
     rescue => ex
       assert_equal Getopt::ArgumentRequiredError, ex.class
-      assert_equal "a", ex.option
-      assert_equal "option requires an argument", ex.message
+      assert_equal "-a", ex.option
+      assert_equal "Option requires an argument", ex.message
     end
   end
 
@@ -233,7 +233,8 @@ class Test_getopt < Test::Unit::TestCase
     av = [ "-a", "" ]
     opts = "a:"
     $stderr = StringIO.new
-    assert_equal [:argument_required, "a"],  getopt(av, opts, allow_empty_optarg:false)
+    assert_equal [:argument_required, "-a"],
+                 getopt(av, opts, allow_empty_optarg:false)
     $stderr = STDERR
   end
 
@@ -241,7 +242,8 @@ class Test_getopt < Test::Unit::TestCase
     av = [ "--foo=" ]
     longopts = { "foo" => :required_argument }
     $stderr = StringIO.new
-    assert_equal [:argument_required, "foo"],  getopt(av, "", longopts, allow_empty_optarg:false)
+    assert_equal [:argument_required, "--foo"],
+                 getopt(av, "", longopts, allow_empty_optarg:false)
     $stderr = STDERR
   end
 
@@ -249,7 +251,8 @@ class Test_getopt < Test::Unit::TestCase
     av = [ "--foo", "" ]
     longopts = { "foo" => :required_argument }
     $stderr = StringIO.new
-    assert_equal [:argument_required, "foo"],  getopt(av, "", longopts, allow_empty_optarg:false)
+    assert_equal [:argument_required, "--foo"],
+                 getopt(av, "", longopts, allow_empty_optarg:false)
     $stderr = STDERR
   end
 
@@ -257,7 +260,8 @@ class Test_getopt < Test::Unit::TestCase
     av = [ "--foo=" ]
     longopts = { "foo" => :optional_argument }
     $stderr = StringIO.new
-    assert_equal [:argument_required, "foo"],  getopt(av, "", longopts, allow_empty_optarg:false)
+    assert_equal [:argument_required, "--foo"],
+                 getopt(av, "", longopts, allow_empty_optarg:false)
     $stderr = STDERR
   end
 
@@ -268,7 +272,7 @@ class Test_getopt < Test::Unit::TestCase
     opts = "a"
     assert_equal [ "a" ], getopt(av, opts)
     $stderr = StringIO.new
-    assert_equal [ :unknown_option, "-" ], getopt(av, opts)
+    assert_equal [ :unknown_option, "--" ], getopt(av, opts)
     $stderr = STDERR
   end
 
@@ -292,7 +296,7 @@ class Test_getopt < Test::Unit::TestCase
     assert_equal [ "a" ], getopt(av, opts, lopts)
     assert_equal [ "-" ], getopt(av, opts, lopts)
     $stderr = StringIO.new
-    assert_equal [ :unknown_option, "f" ], getopt(av, opts, lopts)
+    assert_equal [ :unknown_option, "-f" ], getopt(av, opts, lopts)
     $stderr = STDERR
   end
 
@@ -353,8 +357,8 @@ class Test_getopt < Test::Unit::TestCase
     got = getopt(av, "", lopts)
     msg = $stderr.string
     $stderr = STDERR
-    assert_equal [ :unknown_option, "bar" ], got
-    assert_equal "#{myname}: unknown option --bar\n", msg
+    assert_equal [ :unknown_option, "--bar" ], got
+    assert_equal "#{myname}: Unknown option: --bar\n", msg
   end
 
   test "no_argument" do
@@ -374,8 +378,8 @@ class Test_getopt < Test::Unit::TestCase
     got = getopt(av, "", lopts)
     msg = $stderr.string
     $stderr = STDERR
-    assert_equal [ :argument_given, "foo" ], got
-    assert_equal "#{myname}: option doesn't take an argument --foo\n", msg
+    assert_equal [ :argument_given, "--foo" ], got
+    assert_equal "#{myname}: Option doesn't take an argument: --foo\n", msg
   end
 
   test "no_argument, exception" do
@@ -387,8 +391,8 @@ class Test_getopt < Test::Unit::TestCase
       getopt(av, "", lopts, use_exception:true)
     rescue => ex
       assert_equal Getopt::ArgumentGivenError, ex.class
-      assert_equal "foo", ex.option
-      assert_equal "option doesn't take an argument", ex.message
+      assert_equal "--foo", ex.option
+      assert_equal "Option doesn't take an argument", ex.message
     end
   end
 
@@ -425,8 +429,8 @@ class Test_getopt < Test::Unit::TestCase
     got = getopt(av, "", lopts)
     msg = $stderr.string
     $stderr = STDERR
-    assert_equal [ :argument_required, "foo" ], got
-    assert_equal "#{myname}: option requires an argument --foo\n", msg
+    assert_equal [ :argument_required, "--foo" ], got
+    assert_equal "#{myname}: Option requires an argument: --foo\n", msg
   end
 
   test "required_argument, exception" do
@@ -438,8 +442,8 @@ class Test_getopt < Test::Unit::TestCase
       getopt(av, "", lopts, use_exception:true)
     rescue => ex
       assert_equal Getopt::ArgumentRequiredError, ex.class
-      assert_equal "foo", ex.option
-      assert_equal "option requires an argument", ex.message
+      assert_equal "--foo", ex.option
+      assert_equal "Option requires an argument", ex.message
     end
   end
 
@@ -513,8 +517,8 @@ class Test_getopt < Test::Unit::TestCase
     got = getopt(av, "", lopts)
     msg = $stderr.string
     $stderr = STDERR
-    assert_equal [ :ambiguous_option, "foo", ["foo1", "foo2"] ], got
-    assert_equal "#{myname}: ambiguos option (--foo1 --foo2) --foo\n", msg
+    assert_equal [ :ambiguous_option, ["--foo", [ "--foo1", "--foo2" ]]], got
+    assert_equal "#{myname}: Ambiguos option (--foo1,--foo2): --foo\n", msg
   end
 
   test "abbrev, ambiguous, exception" do
@@ -527,8 +531,8 @@ class Test_getopt < Test::Unit::TestCase
       getopt(av, "", lopts, use_exception:true)
     rescue => ex
       assert_equal Getopt::AmbiguousOptionError, ex.class
-      assert_equal "foo", ex.option
-      assert_equal "ambiguos option (--foo1 --foo2)", ex.message
+      assert_equal "--foo", ex.option
+      assert_equal "Ambiguos option (--foo1,--foo2)", ex.message
     end
   end
 
@@ -541,7 +545,64 @@ class Test_getopt < Test::Unit::TestCase
     got = getopt(av, "", lopts, abbreviation:false)
     msg = $stderr.string
     $stderr = STDERR
-    assert_equal [ :unknown_option, "fo" ], got
-    assert_equal "#{myname}: unknown option --fo\n", msg
+    assert_equal [ :unknown_option, "--fo" ], got
+    assert_equal "#{myname}: Unknown option: --fo\n", msg
   end
+
+  # Getopt.parse
+
+  test "Getopt.parse" do
+    av = [ "-a", "foo", "-bx", "-x",
+           "-c", "-cx",
+           "--noarg", "--reqarg=x",
+           "--oparg", "--oparg=x" ]
+    lopts = {
+      "noarg" => :no_argument,
+      "reqarg" => :required_argument,
+      "oparg" => :optional_argument,
+    }
+
+    got = Getopt.parse(av, "ab:c::", lopts)
+
+    assert_equal [ [ :short, :no_argument, "-a" ],
+                   "foo",
+                   [ :short, :required_argument, "-b", "x" ],
+                   [ :error, :unknown_option, "-x" ],
+                   [ :short, :optional_argument, "-c", nil ],
+                   [ :short, :optional_argument, "-c", "x" ],
+                   [ :long, :no_argument, "--noarg" ],
+                   [ :long, :required_argument, "--reqarg", "x" ],
+                   [ :long, :optional_argument, "--oparg", nil ],
+                   [ :long, :optional_argument, "--oparg", "x" ]],
+                 got
+  end
+
+  # Getopt.list
+
+  test "Getopt.list" do
+    av = [ "-a", "foo", "-bx", "-x",
+           "-c", "-cx",
+           "--noarg", "--reqarg=x",
+           "--oparg", "--oparg=x" ]
+    lopts = {
+      "noarg" => :no_argument,
+      "reqarg" => :required_argument,
+      "oparg" => :optional_argument,
+    }
+
+    got = Getopt.list(av, "ab:c::", lopts)
+
+    assert_equal [ "-a",
+                   "foo",
+                   %|-b "x"|,
+                   [ :error, :unknown_option, "-x" ],
+                   "-c",
+                   %|-c"x"|,
+                   "--noarg",
+                   %|--reqarg="x"|,
+                   "--oparg",
+                   %|--oparg="x"| ],
+                 got
+  end
+
 end

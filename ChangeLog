@@ -1,3 +1,18 @@
+2019-04-17  noz
+
+	* v2.0.0
+
+	API changes
+	* add hyphen to option char in error return and exception
+	* the second element for :ambiguous_option is changed to a list
+	consist of option string and candidates
+	* better error message format
+
+	Addition
+	* keyword argument :parse added to getopt()
+	* Getopt.list()
+	* Getopt.parse()
+
 2019-04-16  noz
 
 	* v1.2.1
