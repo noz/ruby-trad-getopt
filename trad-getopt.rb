@@ -1,6 +1,6 @@
 module Getopt
 
-  VERSION = "2.0.0"
+  VERSION = "2.0.1"
 
   class GetoptError < StandardError
     def initialize option, message
@@ -48,6 +48,7 @@ module Getopt
                  # error_message:
                  # parse:
 
+    argv = argv.dup
     xargv = []
     loop {
       ret = getopt argv, opts, longopts,
@@ -88,6 +89,7 @@ module Getopt
                 # error_message:
                 # parse:
 
+    argv = argv.dup
     xargv = []
     loop {
       ret = getopt argv, opts, longopts,

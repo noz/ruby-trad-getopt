@@ -1,3 +1,10 @@
+2019-04-18  noz  <noz@stream>
+
+	* v2.0.1
+
+	Bug fix
+	* Getopt.parse() and Getopt.list() do not destruct argv now
+
 2019-04-17  noz
 
 	* v2.0.0
